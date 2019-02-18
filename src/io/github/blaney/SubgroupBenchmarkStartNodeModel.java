@@ -3,9 +3,11 @@ package io.github.blaney;
 import java.io.File;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.knime.base.node.preproc.double2int.WarningMessage;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.container.ColumnRearranger;
@@ -13,6 +15,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.util.KNIMETimer;
+import org.knime.time.util.DateTimeUtils;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -35,16 +39,20 @@ public class SubgroupBenchmarkStartNodeModel extends NodeModel {
 	private static int m_runCount = 1;
 	
 	//note config keys must match with the "End" node keys!
-	private static final String CFGKEY_RUN_NAME = "runName";
-	private static final String CFGKEY_CLEAR_DATA = "clearData";
-	private static final String CFGKEY_RUN_COUNT = "runCount";
-	private static final String CFGKEY_START_TIME = "runStartTime";
+	static final String CFGKEY_RUN_NAME = "runName";
+	static final String CFGKEY_CLEAR_DATA = "clearData";
+	static final String CFGKEY_RUN_COUNT = "runCount";
+	static final String CFGKEY_START_TIME = "runStartTime";
+	static final String CFGKEY_RUN_DATE = "runDate";
+	static final String CFGKEY_RUN_NOTES = "runNotes";
 	
 	private static final String DEFAULT_RUN_NAME = "Execution";
 	private static final boolean DEFAULT_CLEAR_DATA = false;
-	
-	private static SettingsModelString m_runName = new SettingsModelString(CFGKEY_RUN_NAME, DEFAULT_RUN_NAME);
-	private static SettingsModelBoolean m_clearData = new SettingsModelBoolean(CFGKEY_CLEAR_DATA, DEFAULT_CLEAR_DATA);
+	private static final String DEFAULT_NOTE = "none";
+
+	static SettingsModelString m_runName = new SettingsModelString(CFGKEY_RUN_NAME, DEFAULT_RUN_NAME);
+	static SettingsModelBoolean m_clearData = new SettingsModelBoolean(CFGKEY_CLEAR_DATA, DEFAULT_CLEAR_DATA);
+	static SettingsModelString m_runNote = new SettingsModelString(CFGKEY_RUN_NOTES, DEFAULT_NOTE);
 
     protected SubgroupBenchmarkStartNodeModel() {
         super(1, 1);
@@ -56,8 +64,7 @@ public class SubgroupBenchmarkStartNodeModel extends NodeModel {
     	DataTableSpecCreator tableSpecCreator = new DataTableSpecCreator(inData[IN_PORT].getDataTableSpec());
     	//must be done in execution as opposed to config or other
     	tableSpecCreator.putProperties(propertiesBuilder());
-    	ColumnRearranger outColumnRearranger = new ColumnRearranger(tableSpecCreator.createSpec());
-    	BufferedDataTable outTable = exec.createColumnRearrangeTable(inData[IN_PORT], outColumnRearranger, exec);
+    	BufferedDataTable outTable = exec.createSpecReplacerTable(inData[IN_PORT], tableSpecCreator.createSpec());
     	m_runCount++;
         return new BufferedDataTable[]{outTable};
     }
@@ -68,6 +75,8 @@ public class SubgroupBenchmarkStartNodeModel extends NodeModel {
     	properties.put(CFGKEY_RUN_COUNT, Integer.toString(m_runCount));
     	properties.put(CFGKEY_RUN_NAME, m_runName.getStringValue());
     	properties.put(CFGKEY_CLEAR_DATA, Boolean.toString(m_clearData.getBooleanValue()));
+    	properties.put(CFGKEY_RUN_NOTES, m_runNote.getStringValue());
+    	properties.put(CFGKEY_RUN_DATE, String.valueOf(DateTimeUtils.asLocalDate(Long.toString(System.currentTimeMillis())).get()));
     	return properties;
     }
     
@@ -82,16 +91,20 @@ public class SubgroupBenchmarkStartNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-    	
-    	//currently nothing to do here
-        return new DataTableSpec[]{null};
+    	if(m_runName.getStringValue().trim().length() == 0) {
+    		throw new InvalidSettingsException("Please enter a valid name for Row Key seed in the benchmarked output table or leave it blank.");
+    	}
+    	if(m_clearData.getBooleanValue()) {
+    		m_runCount = 1;
+    	}
+        return new DataTableSpec[]{inSpecs[IN_PORT]};
     }
 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     	settings.addInt(CFGKEY_RUN_COUNT, m_runCount);
     	m_runName.saveSettingsTo(settings);
-    	
+    	m_runNote.saveSettingsTo(settings);
     	//default behavior should probably NOT save the settings for this because 
     	//desired bahavior will probably be one clear and then additional data 
     	//collection until the next clear
@@ -101,21 +114,23 @@ public class SubgroupBenchmarkStartNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+    	try {
     	m_runCount = settings.getInt(CFGKEY_RUN_COUNT);
+
+    	} catch (InvalidSettingsException e) {
+    		setWarningMessage("Your benchmark node has not detected previous executions.");
+    	}
+    	m_runNote.setStringValue(settings.getString(CFGKEY_RUN_NOTES));
     	m_runName.setStringValue(settings.getString(CFGKEY_RUN_NAME));
-    	
 //    	m_clearData.setBooleanValue(settings.getBoolean(CFGKEY_CLEAR_DATA));
     }
 
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-    	if(m_runName.getStringValue().trim().length() == 0) {
-    		throw new InvalidSettingsException("Please enter a valid name for Row Key seed in the benchmarked output table or leave it blank.");
-    	}
-    	if(m_clearData.getBooleanValue()) {
-    		m_runCount = 0;
-    	}
+    	m_runName.validateSettings(settings);
+    	m_clearData.validateSettings(settings);
+    	m_runName.validateSettings(settings);
     }
 
     @Override

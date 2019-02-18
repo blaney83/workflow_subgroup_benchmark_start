@@ -1,8 +1,12 @@
 package io.github.blaney;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * <code>NodeDialog</code> for the "SubgroupBenchmarkStart" Node.
@@ -20,12 +24,17 @@ public class SubgroupBenchmarkStartNodeDialog extends DefaultNodeSettingsPane {
     protected SubgroupBenchmarkStartNodeDialog() {
         super();
         
-//        addDialogComponent(new DialogComponentNumber(
-//                new SettingsModelIntegerBounded(
-//                    SubgroupBenchmarkStartNodeModel.CFGKEY_COUNT,
-//                    SubgroupBenchmarkStartNodeModel.DEFAULT_COUNT,
-//                    Integer.MIN_VALUE, Integer.MAX_VALUE),
-//                    "Counter:", /*step*/ 1, /*componentwidth*/ 5));
+        addDialogComponent(new DialogComponentString(
+                SubgroupBenchmarkStartNodeModel.m_runName, 
+                "Choose a name for tracking purposes (ex: Test, Execution, 'Your Name', etc.)"));
+        
+        addDialogComponent(new DialogComponentString(
+        		SubgroupBenchmarkStartNodeModel.m_runNote,
+        		"Execution annotation."));
+        
+        addDialogComponent(new DialogComponentBoolean(
+        		SubgroupBenchmarkStartNodeModel.m_clearData, 
+        		"Clear cached benchmark data on next execution?"));
                     
     }
 }
