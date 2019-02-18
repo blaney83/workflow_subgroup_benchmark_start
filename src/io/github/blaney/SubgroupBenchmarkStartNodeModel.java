@@ -3,7 +3,9 @@ package io.github.blaney;
 import java.io.File;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -24,7 +26,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-	
+	//idea: create this node as a static singleton
 
 /**
  * This is the model implementation of SubgroupBenchmarkStart.
@@ -71,12 +73,15 @@ public class SubgroupBenchmarkStartNodeModel extends NodeModel {
     
     private Map<String, String> propertiesBuilder(){
     	Map<String, String> properties = new LinkedHashMap<String, String>();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		System.out.print(String.valueOf(dateFormat.format(new Date(System.currentTimeMillis()))));
     	properties.put(CFGKEY_START_TIME, Long.toString(System.nanoTime()));
     	properties.put(CFGKEY_RUN_COUNT, Integer.toString(m_runCount));
     	properties.put(CFGKEY_RUN_NAME, m_runName.getStringValue());
     	properties.put(CFGKEY_CLEAR_DATA, Boolean.toString(m_clearData.getBooleanValue()));
     	properties.put(CFGKEY_RUN_NOTES, m_runNote.getStringValue());
-    	properties.put(CFGKEY_RUN_DATE, String.valueOf(DateTimeUtils.asLocalDate(Long.toString(System.currentTimeMillis())).get()));
+    	properties.put(CFGKEY_RUN_DATE, String.valueOf(dateFormat.format(new Date(System.currentTimeMillis()))));
+//    	properties.put(CFGKEY_RUN_DATE, String.valueOf(DateTimeUtils.asLocalDate(Long.toString(System.currentTimeMillis())).get()));
     	return properties;
     }
     
@@ -129,7 +134,7 @@ public class SubgroupBenchmarkStartNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     	m_runName.validateSettings(settings);
-    	m_clearData.validateSettings(settings);
+//    	m_clearData.validateSettings(settings);
     	m_runName.validateSettings(settings);
     }
 
