@@ -4,21 +4,16 @@ import java.io.File;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.knime.base.node.preproc.double2int.WarningMessage;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
-import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.util.KNIMETimer;
-import org.knime.time.util.DateTimeUtils;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -81,7 +76,6 @@ public class SubgroupBenchmarkStartNodeModel extends NodeModel {
     	properties.put(CFGKEY_CLEAR_DATA, Boolean.toString(m_clearData.getBooleanValue()));
     	properties.put(CFGKEY_RUN_NOTES, m_runNote.getStringValue());
     	properties.put(CFGKEY_RUN_DATE, String.valueOf(dateFormat.format(new Date(System.currentTimeMillis()))));
-//    	properties.put(CFGKEY_RUN_DATE, String.valueOf(DateTimeUtils.asLocalDate(Long.toString(System.currentTimeMillis())).get()));
     	return properties;
     }
     
@@ -113,7 +107,6 @@ public class SubgroupBenchmarkStartNodeModel extends NodeModel {
     	//default behavior should probably NOT save the settings for this because 
     	//desired bahavior will probably be one clear and then additional data 
     	//collection until the next clear
-//    	m_clearData.saveSettingsTo(settings);
     }
 
     @Override
@@ -127,14 +120,12 @@ public class SubgroupBenchmarkStartNodeModel extends NodeModel {
     	}
     	m_runNote.setStringValue(settings.getString(CFGKEY_RUN_NOTES));
     	m_runName.setStringValue(settings.getString(CFGKEY_RUN_NAME));
-//    	m_clearData.setBooleanValue(settings.getBoolean(CFGKEY_CLEAR_DATA));
     }
 
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     	m_runName.validateSettings(settings);
-//    	m_clearData.validateSettings(settings);
     	m_runName.validateSettings(settings);
     }
 

@@ -1,12 +1,8 @@
 package io.github.blaney;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
-import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * <code>NodeDialog</code> for the "SubgroupBenchmarkStart" Node.
@@ -30,7 +26,7 @@ public class SubgroupBenchmarkStartNodeDialog extends DefaultNodeSettingsPane {
         
         addDialogComponent(new DialogComponentString(
         		SubgroupBenchmarkStartNodeModel.m_runNote,
-        		"Execution annotation."));
+        		"Execution annotation:"));
         
         addDialogComponent(new DialogComponentBoolean(
         		SubgroupBenchmarkStartNodeModel.m_clearData, 
